@@ -408,6 +408,9 @@ PyThread_get_thread_native_id(void)
     unsigned long native_id = (unsigned long)getpid() << 32 | lwp_gettid();
 #elif defined(__sun__) && SIZEOF_LONG >= 8
     unsigned long native_id = (unsigned long)getpid() << 32 | thr_self();
+#elif defined(__MSYS__) || defined(__MINGW32__) || defined(__MINGW64__)
+    unsigned long native_id;
+    native_id = GetCurrentThreadId();
 #endif
     return (unsigned long) native_id;
 }

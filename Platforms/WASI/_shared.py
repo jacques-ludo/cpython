@@ -46,7 +46,7 @@ class Context:
 
     @functools.cached_property
     def host_triple(self):
-        if self._host_triple:
+        if hasattr(self, "_host_triple") and self._host_triple:
             return self._host_triple
 
         with (self.here / "config.toml").open("rb") as file:
@@ -61,9 +61,12 @@ class Context:
     @functools.cached_property
     def build_python_path(self):
         # Build platform can also be found via `config.guess`.
-        return self.cross_build_path / sysconfig.get_config_var(
-            "BUILD_GNU_TYPE"
-        )
+        # On some systems, sysconfig.get_config_var("BUILD_GNU_TYPE") may return None.
+        # In that case, fallback to using the host triple.
+        BUILD_GNU_TYPE = sysconfig.get_config_var("BUILD_GNU_TYPE")
+        if not BUILD_GNU_TYPE:
+            return self.cross_build_path / self.host_triple
+        return self.cross_build_path / BUILD_GNU_TYPE
 
     @functools.cached_property
     def build_python_interpreter(self):

@@ -111,6 +111,16 @@ def call(command, *, context=None, quiet=False, **kwargs):
     if context is not None:
         quiet = context.quiet
 
+    if os.name == "nt":
+        # are we on MSYS or some other Windows environment
+        if "MSYSTEM" in os.environ:
+            # MSYS environment, don't prepend 'cmd /c'
+            command = ["bash", "-c"] + command
+            print("Running on MSYS/MinGW Windows, using 'bash -c' to run the command.")
+        else:
+            command = ["cmd", "/c"] + command
+            print("Running on Windows, prepending 'cmd /c' to the command.")
+
     _shared.log("❯", " ".join(map(str, command)), spacing="  ")
     if not quiet:
         stdout = None
@@ -162,7 +172,6 @@ def configure_build_python(context, working_dir):
     configure = [os.path.relpath(context.checkout / "configure", working_dir)]
     if context.args:
         configure.extend(context.args)
-
     call(configure, context=context)
 
 
